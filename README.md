@@ -9,7 +9,14 @@ To see how this things work's see:
 - Body Parsing via [body-parser](https://github.com/expressjs/body-parser)
 - Database [Mongoose](https://github.com/Automattic/mongoose)
 
-
+Configuration
+---------------
+Rename the file [.envexample] to [.env] and set the following configurations:
+- Mongodb connection string.
+- Server running port.
+- JsonWebToken auth secret.
+- BrightID upload server IP address.
+- Your website avatar, publicKey and name.
 
 Getting Started
 ---------------
