@@ -1,14 +1,13 @@
-Express & ES6 REST API Boilerplate
+LocalERC20 express API server
 ==================================
 
-This is a straightforward boilerplate for building REST APIs with ES6 and Express.
+To see how this things work's see:
 
 - ES6 support via [babel](https://babeljs.io)
 - REST resources as middleware via [resource-router-middleware](https://github.com/developit/resource-router-middleware)
 - CORS support via [cors](https://github.com/troygoode/node-cors)
 - Body Parsing via [body-parser](https://github.com/expressjs/body-parser)
-
-> Tip: If you are using [Mongoose](https://github.com/Automattic/mongoose), you can automatically expose your Models as REST resources using [restful-mongoose](https://git.io/restful-mongoose).
+- Database [Mongoose](https://github.com/Automattic/mongoose)
 
 
 
