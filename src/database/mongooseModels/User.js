@@ -1,0 +1,33 @@
+const mongoose = require('mongoose');
+const jsonwebtoken = require('jsonwebtoken');
+
+let userSchema = mongoose.Schema({
+  userName: {type:String, default: "", trim: true},
+  firstName: {type:String, default: "", trim: true},
+  lastName: {type:String, default: "", trim: true},
+  avatar: {type:String, default: ''},
+  brightIdPublicKey: String,
+  email: {type:String, default: "", trim: true},
+  mobile: String
+}, {
+  timestamps: true,
+  toObject: {
+    virtuals: true
+  },
+  toJSON: {
+    virtuals: true
+  }
+});
+
+userSchema.methods.createSessionToken = function () {
+  const sessionToken = jsonwebtoken.sign(
+      {
+        id: this._id,
+        timestamp: Date.now(),
+      },
+      process.env.JWT_AUTH_SECRET
+  );
+  return sessionToken;
+};
+
+const User = module.exports = mongoose.model('user', userSchema);
