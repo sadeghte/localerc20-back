@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Token from '../database/mongooseModels/Token'
 import Currency from '../database/mongooseModels/Currency'
+import Country from '../database/mongooseModels/Country'
 import requireParam from '../middleware/requestParamRequire';
 let router = Router();
 
@@ -27,6 +28,23 @@ router.all('/currencies', function (req, res, next) {
         res.json({
           success: true,
           currencies
+        });
+      })
+      .catch(error => {
+        res.status(500).send({
+          success: false,
+          message: 'Server side error',
+          error
+        });
+      })
+});
+
+router.all('/countries', function (req, res, next) {
+  Country.find({})
+      .then(countries => {
+        res.json({
+          success: true,
+          countries
         });
       })
       .catch(error => {

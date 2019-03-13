@@ -14,6 +14,14 @@ function checkUsernameAvailable(username){
       })
 }
 
+function checkEmailAvailable(email){
+  return User.findOne({email: new RegExp(`^${email}$`,"i")})
+      .then(user => {
+        if(user)
+          throw {message: 'This email already registered'}
+      })
+}
+
 router.all('/info', function (req, res, next) {
   res.json({
     success: true,
@@ -61,5 +69,47 @@ router.post('/update-username', requireParam('username:string'), function (req, 
         })
       })
 })
+
+router.post('/check-email', requireParam('email:email'), function (req, res, next) {
+  let email = req.body.email;
+  checkEmailAvailable(email)
+      .then(() => {
+        res.send({
+          success: true,
+          message: 'Email is not registered'
+        })
+      })
+      .catch(error => {
+        res.send({
+          success: false,
+          message: error.message || 'server side error',
+          error: error
+        })
+      })
+})
+
+router.post('/update-email', requireParam('email:email'), function (req, res, next) {
+  let email = req.body.email;
+  checkEmailAvailable(email)
+      .then(() => {
+        let user = req.data.user;
+        user.email = email;
+        return user.save();
+      })
+      .then(() => {
+        res.send({
+          success: true,
+          message: 'Email updated successfully'
+        })
+      })
+      .catch(error => {
+        res.send({
+          success: false,
+          message: error.message || 'server side error',
+          error: error
+        })
+      })
+})
+
 
 export default router;
