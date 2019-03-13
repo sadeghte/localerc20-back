@@ -111,5 +111,29 @@ router.post('/update-email', requireParam('email:email'), function (req, res, ne
       })
 })
 
+router.post('/update', function (req, res, next) {
+  let user = req.data.user;
+  let update = {};
+  if(req.body.firstName !== undefined && typeof req.body.firstName === 'string')
+    update.firstName = req.body.firstName;
+  if(req.body.lastName !== undefined && typeof req.body.lastName === 'string')
+    update.lastName = req.body.lastName;
+  if(req.body.country !== undefined && typeof req.body.country === 'string')
+    update.country = req.body.country;
+  if(req.body.mobile !== undefined && typeof req.body.mobile === 'string') {
+    update.mobile = req.body.mobile;
+    update.mobileConfirmed = false;
+  }
+  Object.keys(update).map(key => {user[key] = update[key]});
+  user.save();
+  res.send({
+    success: true,
+    message: 'User data updated',
+    updatedFields: update
+  })
+  // let user = req.data.user;
+  // return user.save();
+})
+
 
 export default router;

@@ -8,8 +8,11 @@ let userSchema = mongoose.Schema({
   avatar: {type:String, default: ''},
   brightIdPublicKey: String,
   brightIdScore: {type: Number, default: 0},
+  country: {type:String, default: "", trim: true},
   email: {type:String, default: "", trim: true},
-  mobile: String
+  emailConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true},
+  mobile: {type:String, default: "", trim: true},
+  mobileConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true}
 }, {
   timestamps: true,
   toObject: {
