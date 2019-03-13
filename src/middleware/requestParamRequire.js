@@ -50,14 +50,14 @@ function applyValidator(obj, param, validation){
             return `error at index [${i}].\n\t ${error}`;
           }
         }
-      }else {
+      }else if(validator[validation]){
         let error = validator[validation](obj[param]);
         if (error) {
           return error;
         }
+      }else{
+        return `Invalid validator function: "${validation}"`;
       }
-    }else{
-      return `Invalid validator function: "${validation}"`;
     }
   }
 }
