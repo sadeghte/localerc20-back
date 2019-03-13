@@ -149,7 +149,7 @@ router.post('/login', requireParam('id:objectId'), function (req, res, next) {
             avatar: userInfo.photo,
             brightIdPublicKey: userInfo.publicKey,
           });
-          user.userName = 'user-' + user._id;
+          user.username = 'user-' + user._id;
         }
         user.brightIdScore = userInfo.score;
         user.save();
