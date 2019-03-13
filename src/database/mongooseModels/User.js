@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const jsonwebtoken = require('jsonwebtoken');
 
 let userSchema = mongoose.Schema({
-  userName: {type:String, default: "", trim: true},
+  userName: {type:String, default: "", trim: true, unique: true},
   firstName: {type:String, default: "", trim: true},
   lastName: {type:String, default: "", trim: true},
   avatar: {type:String, default: ''},
