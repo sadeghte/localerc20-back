@@ -7,6 +7,7 @@ let userSchema = mongoose.Schema({
   lastName: {type:String, default: "", trim: true},
   avatar: {type:String, default: ''},
   brightIdPublicKey: String,
+  brightIdScore: {type: Number, default: 0},
   email: {type:String, default: "", trim: true},
   mobile: String
 }, {

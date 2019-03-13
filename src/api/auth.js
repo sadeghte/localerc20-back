@@ -149,8 +149,9 @@ router.post('/login', requireParam('id:objectId'), function (req, res, next) {
             avatar: userInfo.photo,
             brightIdPublicKey: userInfo.publicKey,
           });
-          user.save();
         }
+        user.brightIdScore = userInfo.score;
+        user.save();
         let session = new UserSession({
           user,
           token: user.createSessionToken(),
