@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import User from '../database/mongooseModels/User';
-import requireParam from '../middleware/requestParamRequire';
+const { Router } = require('express');
+const User  = require('../database/mongooseModels/User');
+const requireParam  = require('../middleware/requestParamRequire');
 let router = Router();
 
 function checkUsernameAvailable(username){
@@ -136,4 +136,4 @@ router.post('/update', function (req, res, next) {
 })
 
 
-export default router;
+module.exports = router;

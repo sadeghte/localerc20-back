@@ -1,17 +1,20 @@
-import { Router } from 'express';
-import Token from '../../database/mongooseModels/Token'
-import Currency from '../../database/mongooseModels/Currency'
-import Country from '../../database/mongooseModels/Country'
-import requireParam from '../../middleware/requestParamRequire';
+const { Router } = require('express');
+const Token = require('../../database/mongooseModels/Token')
+const Currency = require('../../database/mongooseModels/Currency')
+const Country = require('../../database/mongooseModels/Country')
+const PaymentMethod = require('../../database/mongooseModels/PaymentMethod')
+const requireParam = require('../../middleware/requestParamRequire');
 let router = Router();
 
-import initTokens from './init-tokens.json';
-import initCurrencies from './init-currency.json';
-import initCountries from './init-countries.json';
+const initTokens = require('./init-tokens.json');
+const initCurrencies = require('./init-currency.json');
+const initCountries = require('./init-countries.json');
+const initPaymentMethods = require('./init-payment-methods.json');
 
 router.all('/', function (req, res, next) {
   // initTokens.map(token => {new Token(token).save();});
-  initCountries.map(country => {new Country(country).save();});
+  // initCountries.map(country => {new Country(country).save();});
+  initPaymentMethods.map(method => {new PaymentMethod(method).save();});
   // initCurrencies.map(c => {
   //   if(!c.title)
   //     c.title = c.code;
@@ -23,4 +26,4 @@ router.all('/', function (req, res, next) {
   })
 });
 
-export default router;
+module.exports = router;

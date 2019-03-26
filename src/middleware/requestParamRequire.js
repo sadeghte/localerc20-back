@@ -1,6 +1,6 @@
-import validator from '../validator';
+const validator = require('../validator');
 
-export default function () {
+module.exports = function () {
   let requiredParams = [];
   for(let i=0 ; i<arguments.length ; i++){
     if(typeof arguments[i] === 'string')

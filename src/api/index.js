@@ -1,18 +1,20 @@
-import { version } from '../../package.json';
-import { Router } from 'express';
-import {forceAuthorized} from '../middleware/Authenticate';
-import authRoutes from './auth';
-import userRoutes from './user';
-import resourceRoutes from './resources';
-import seedRoutes from './seed';
-import facets from './facets';
+const { version } = require('../../package.json');
+const { Router } = require('express');
+const {forceAuthorized} = require('../middleware/Authenticate');
+const authRoutes = require('./auth');
+const userRoutes = require('./user');
+const advertisementRoutes = require('./advertisement');
+const resourceRoutes = require('./resources');
+const seedRoutes = require('./seed');
+const facets = require('./facets');
 
-export default ({ config, db }) => {
+module.exports = ({ config, db }) => {
 	let api = Router();
 	// mount the facets resource
-	api.use('/facets', facets({ config, db }));
+	// api.use('/facets', facets({ config, db }));
 	api.use('/auth', authRoutes);
 	api.use('/user', forceAuthorized, userRoutes);
+  api.use('/advertisement', advertisementRoutes);
 	api.use('/resource', resourceRoutes);
 	api.use('/seed', seedRoutes);
 	// perhaps expose some API metadata at the root

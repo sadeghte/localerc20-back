@@ -1,7 +1,7 @@
-import resource from 'resource-router-middleware';
-import facets from '../models/facets';
+const resource = require('resource-router-middleware');
+const facets = require('../models/facets');
 
-export default ({ config, db }) => resource({
+module.exports = ({ config, db }) => resource({
 
 	/** Property name to store preloaded entity on `request`. */
 	id : 'facet',

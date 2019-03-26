@@ -1,8 +1,9 @@
-import { Router } from 'express';
-import Token from '../database/mongooseModels/Token'
-import Currency from '../database/mongooseModels/Currency'
-import Country from '../database/mongooseModels/Country'
-import requireParam from '../middleware/requestParamRequire';
+const { Router } = require('express');
+const Token = require('../database/mongooseModels/Token')
+const Currency = require('../database/mongooseModels/Currency')
+const Country = require('../database/mongooseModels/Country')
+const PaymentMethod = require('../database/mongooseModels/PaymentMethod')
+const requireParam = require('../middleware/requestParamRequire');
 let router = Router();
 
 router.all('/tokens', function (req, res, next) {
@@ -56,4 +57,21 @@ router.all('/countries', function (req, res, next) {
       })
 });
 
-export default router;
+router.all('/payment-methods', function (req, res, next) {
+  PaymentMethod.find({})
+      .then(allPaymentMethods => {
+        res.json({
+          success: true,
+          allPaymentMethods
+        });
+      })
+      .catch(error => {
+        res.status(500).send({
+          success: false,
+          message: 'Server side error',
+          error
+        });
+      })
+});
+
+module.exports = router;

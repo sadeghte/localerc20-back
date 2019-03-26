@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import User from '../database/mongooseModels/User'
-import UserSession from '../database/mongooseModels/UserSession'
-import validation from '../utils/validation';
-import encryptionUtil from '../utils/encryption';
+const { Router } = require('express');
+const User = require('../database/mongooseModels/User')
+const UserSession = require('../database/mongooseModels/UserSession')
+const validation = require('../utils/validation');
+const encryptionUtil = require('../utils/encryption');
 const nacl = require('tweetnacl');
 const randomBytes = require('randombytes');
 const qrcode = require("qrcode");
@@ -10,8 +10,8 @@ const image2base64 = require('image-to-base64');
 const crypto = require("crypto");
 const fetch = require("node-fetch");
 const B64 = require('base64-js');
-import LoginTry from '../database/mongooseModels/LoginTry';
-import requireParam from '../middleware/requestParamRequire';
+const LoginTry = require('../database/mongooseModels/LoginTry');
+const requireParam = require('../middleware/requestParamRequire');
 let router = Router();
 
 function getResponse(channel, aesKey){
@@ -193,4 +193,4 @@ router.post('/logout', function (req, res, next) {
       });
 });
 
-export default router;
+module.exports = router;

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+let allDocuments = [];
 
 let tokenSchema = mongoose.Schema({
   title: String,
@@ -10,4 +11,31 @@ let tokenSchema = mongoose.Schema({
   info: Object,
 }, {timestamps: true});
 
-module.exports = mongoose.model('crypto-token', tokenSchema);
+function validateCode(code){
+  let index = allDocuments.findIndex(item => item.code === code);
+  return index >= 0;
+}
+
+function findByCode(code){
+  let index = allDocuments.findIndex(item => item.code === code);
+  return allDocuments[index];
+}
+
+// update token list when tokens changed.
+tokenSchema.pre('save', function(next){
+  let index = allDocuments.findIndex(item => item._id === this._id);
+  if(index){
+    allDocuments[index] = this;
+  }else{
+    allDocuments.push(this);
+  }
+});
+
+const Model = module.exports = mongoose.model('crypto-token', tokenSchema);
+module.exports.validateCode = validateCode;
+module.exports.findByCode = findByCode;
+
+// preload tokens
+Model.find({}).then(documents => {
+  allDocuments = documents;
+})
