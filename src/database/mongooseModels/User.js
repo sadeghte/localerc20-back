@@ -12,7 +12,8 @@ let userSchema = mongoose.Schema({
   email: {type:String, default: "", trim: true},
   emailConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true},
   mobile: {type:String, default: "", trim: true},
-  mobileConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true}
+  mobileConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true},
+  score: {type: Number, default: 0}
 }, {
   timestamps: true,
   toObject: {

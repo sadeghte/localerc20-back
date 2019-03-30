@@ -5,6 +5,7 @@ const Token = require('../database/mongooseModels/Token');
 const PaymentMethod = require('../database/mongooseModels/PaymentMethod');
 const Currency = require('../database/mongooseModels/Currency');
 const requireParam = require('../middleware/requestParamRequire');
+const mongoose = require('mongoose');
 let router = Router();
 let allTokens = [];
 Token.find({}).then(tokens => {allTokens = tokens;});
@@ -75,5 +76,44 @@ router.post('/new', forceAuthorized, requireParam('advertisement'), function (re
         })
       })
 });
+
+router.get('/list', function (req, res, next) {
+  Advertisement.find({user: req.data.user._id})
+      .populate('token')
+      .populate('currency')
+      .populate('paymentMethod')
+      .then(advertisements => {
+        console.log('user advertisement count: '+ advertisements.length);
+        res.send({
+          success: true,
+          advertisements
+        })
+      })
+      .catch(error => res.status(500).send({
+        success: false,
+        message: error.message || 'server side error',
+        error
+      }))
+})
+
+router.all('/get', requireParam(['id:objectId']), function (req, res, next) {
+  Advertisement.findOne({_id: mongoose.Types.ObjectId(req.body.id)})
+      .populate('user')
+      .populate('token')
+      .populate('currency')
+      .populate('paymentMethod')
+      .then(advertisement => {
+        res.send({
+          success: true,
+          advertisement,
+          body: req.body
+        })
+      })
+      .catch(error => res.status(500).send({
+        success: false,
+        message: error.message || 'server side error',
+        error
+      }))
+})
 
 module.exports = router;

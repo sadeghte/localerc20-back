@@ -38,7 +38,10 @@ let currencySchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, ref: 'crypto-token',
     required:[true, 'Advertisement token required.']
   },
-  paymentMethod: {type: String, default: ""},
+  paymentMethod: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'payment-method',
+    required:[true, 'Advertisement token required.']
+  },
   paymentWindow: {
     type: String,
     validate: {
