@@ -3,7 +3,6 @@ LocalERC20 express API server
 
 To see how this things work's see:
 
-- ES6 support via [babel](https://babeljs.io)
 - REST resources as middleware via [resource-router-middleware](https://github.com/developit/resource-router-middleware)
 - CORS support via [cors](https://github.com/troygoode/node-cors)
 - Body Parsing via [body-parser](https://github.com/expressjs/body-parser)
@@ -32,11 +31,17 @@ rm -rf .git && git init && npm init
 # Install dependencies
 npm install
 
-# Start development live-reload server
-PORT=4000 npm run dev
-
-# Start production server:
+# Start live-reload server
 PORT=4000 npm start
+
+```
+
+Seed Database
+-------------
+
+open this url in your browser
+```
+http://localhost:4000/api/v0.1/seed
 ```
 
 License
