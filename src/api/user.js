@@ -1,5 +1,8 @@
+const randomString = require("../utils/randomString");
 const { Router } = require('express');
 const User  = require('../database/mongooseModels/User');
+const Token  = require('../database/mongooseModels/Token');
+const Transaction  = require('../database/mongooseModels/Transaction');
 const requireParam  = require('../middleware/requestParamRequire');
 let router = Router();
 
@@ -135,5 +138,110 @@ router.post('/update', function (req, res, next) {
   // return user.save();
 })
 
+router.post('/transactions', function (req, res, next) {
+  let currentUser = req.data.user;
+
+  currentUser.getBalance()
+      .then(({transactions, balance}) => {
+        res.send({
+          success: true,
+          balance,
+          transactions
+        })
+      })
+      .catch(error => {
+        res.status(500).send({
+          success: false,
+          message: error.message || "",
+          error
+        })
+      })
+})
+
+router.post('/fake-deposit', requireParam('token','amount:number'), function (req, res, next) {
+  let token = Token.findByCode(req.body.token);
+  let amount = req.body.amount;
+  let currentUser = req.data.user;
+
+  if(!token){
+    return res.send({
+      success: false,
+      message: 'Token invalid.'
+    })
+  }
+
+  new Transaction({
+    type: Transaction.TYPE_DEPOSIT,
+    amount: amount,
+    token: token.code,
+    status: Transaction.STATUS_DONE,
+    txHash: '0x' + randomString(64,'0123456789abcdef'),
+    from: '0x' + randomString(40,'0123456789abcdef'),
+    to: currentUser.address,
+    txTime: Date.now(),
+  }).save()
+      .then(() => currentUser.getBalance())
+      .then(({transactions, balance}) => {
+        res.send({
+          success: true,
+          balance,
+          transactions
+        })
+      })
+      .catch(error => {
+        res.status(500).send({
+          success: false,
+          message: error.message || "",
+          error
+        })
+      })
+})
+
+router.post('/withdraw', requireParam('token','amount:number', 'to:address'), function (req, res, next) {
+  let token = Token.findByCode(req.body.token);
+  let amount = req.body.amount;
+  let to = req.body.to;
+  let currentUser = req.data.user;
+
+  if(!token){
+    return res.send({
+      success: false,
+      message: 'Token invalid.'
+    })
+  }
+
+  currentUser.getBalance()
+      .then(({balance}) => {
+        if(amount <= 0)
+          throw {message: 'Token amount most be positive value'};
+        if(amount > balance[token.code])
+          throw {message: 'Token balance is not sufficient'};
+        return new Transaction({
+          type: Transaction.TYPE_WITHDRAW,
+          amount: amount,
+          token: token.code,
+          status: Transaction.STATUS_DONE,
+          txHash: '0x' + randomString(64,'0123456789abcdef'),
+          from: currentUser.address,
+          to: to,
+          txTime: Date.now(),
+        }).save()
+      })
+      .then(() => currentUser.getBalance())
+      .then(({transactions, balance}) => {
+        res.send({
+          success: true,
+          balance,
+          transactions
+        })
+      })
+      .catch(error => {
+        res.status(500).send({
+          success: false,
+          message: error.message || "",
+          error
+        })
+      })
+})
 
 module.exports = router;

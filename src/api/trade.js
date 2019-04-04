@@ -1,22 +1,24 @@
+const randomString = require("../utils/randomString");
 const { Router } = require('express');
 const mongoose = require('mongoose');
 const Advertisement = require('../database/mongooseModels/Advertisement');
 const {forceAuthorized} = require('../middleware/Authenticate');
 const Trade = require('../database/mongooseModels/Trade');
+const Transaction = require('../database/mongooseModels/Transaction');
 const TradeMessage = require('../database/mongooseModels/TradeMessage');
 const requireParam = require('../middleware/requestParamRequire');
 let router = Router();
 
 router.post('/search', function (req, res, next) {
   let sellAdvertisements = [], buyAdvertisements = [];
-  Advertisement.find({type: 'sell'})
+  Advertisement.find({type: 'sell', ownerBalanceEnough: true})
       .limit(5)
       .populate('user')
       .populate('token')
       .populate('currency')
       .then(advs => {
         sellAdvertisements = advs;
-        return Advertisement.find({type: 'buy'})
+        return Advertisement.find({type: 'buy', ownerBalanceEnough: true})
             .limit(5)
             .populate('user')
             .populate('token')
@@ -176,7 +178,7 @@ router.post('/start', forceAuthorized, requireParam('id:objectId'), function (re
   let trade = null;
   Trade.findOne({_id: req.body.id})
       .populate('user')
-      .populate('advertisement')
+      .populate({path: 'advertisement', populate: {path: 'token'}})
       .populate('messages')
       .populate({path: 'messages.sender', model: 'user'})
       .then(trd => {
@@ -187,12 +189,33 @@ router.post('/start', forceAuthorized, requireParam('id:objectId'), function (re
           throw {message: "Access denied. only advertisement owner, can start a trade"};
         trade.status = Trade.STATUS_START;
         trade.startTime = Date.now();
-        // trade.messages.push({
-        //   sender: currentUser,
-        //   type:Trade.MESSAGE_TYPE_TEXT,
-        //   content: 'Owner accept and start the trade'
-        // });
         return trade.save();
+      })
+      .then(() => {
+        // advertisement owner transaction
+        return new Transaction({
+          type: trade.advertisement.type === 'sell' ? Transaction.TYPE_SELL : Transaction.TYPE_BUY,
+          amount: trade.tokenCount,
+          token: trade.advertisement.token.code,
+          status: Transaction.STATUS_NEW,
+          txHash: '0x' + randomString(64,'0123456789abcdef'),
+          from: trade.advertisement.type === 'sell' ? currentUser.address : trade.user.address,
+          to: trade.advertisement.type === 'sell' ? trade.user.address : currentUser.address,
+          txTime: Date.now(),
+        }).save();
+      })
+      .then(() => {
+        // trade owner transaction
+        return new Transaction({
+          type: trade.advertisement.type === 'sell' ? Transaction.TYPE_BUY : Transaction.TYPE_SELL,
+          amount: trade.tokenCount,
+          token: trade.advertisement.token.code,
+          status: Transaction.STATUS_NEW,
+          txHash: '0x' + randomString(64,'0123456789abcdef'),
+          from: trade.advertisement.type === 'sell' ? trade.user.address : currentUser.address,
+          to: trade.advertisement.type === 'sell' ? currentUser.address : trade.user.address,
+          txTime: Date.now(),
+        }).save();
       })
       .then(() => {
         res.send({
@@ -202,6 +225,7 @@ router.post('/start', forceAuthorized, requireParam('id:objectId'), function (re
       })
       .catch(error => {
         console.log(error.message);
+        // TODO: document modification
         res.status(500).send({
           success: false,
           message: error.message || 'server side error',

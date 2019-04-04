@@ -1,7 +1,7 @@
-import mkdirp from './mkdirP';
-import fs from 'fs';
+const mkdirp = require('./mkdirP');
+const fs = require('fs');
 
-export default function (dir) {
+module.exports = function (dir) {
   // eslint-disable-next-line no-undef
   return new Promise(function (resolve, reject) {
     mkdirp(dir, function(err){

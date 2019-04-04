@@ -5,12 +5,13 @@ const Token = require('../database/mongooseModels/Token');
 const PaymentMethod = require('../database/mongooseModels/PaymentMethod');
 const Currency = require('../database/mongooseModels/Currency');
 const requireParam = require('../middleware/requestParamRequire');
+const bind = require('../middleware/bindRequestToModel');
 const mongoose = require('mongoose');
 let router = Router();
 let allTokens = [];
 Token.find({}).then(tokens => {allTokens = tokens;});
 
-function validateNewAdvertisement(adv) {
+const validateNewAdvertisement = async (adv) => {
   let timeWindowRegx = /^\d{2}:\d{2}$/;
   let errors = [];
   if(adv.type !== 'sell' && adv.type !== 'but')
@@ -46,6 +47,7 @@ function validateNewAdvertisement(adv) {
 }
 
 router.post('/new', forceAuthorized, requireParam('advertisement'), function (req, res, next) {
+  let currentUser = req.data.user;
   let advertisement = req.body.advertisement;
   advertisement.user = req.data.user;
   let errors = validateNewAdvertisement(advertisement);
@@ -61,8 +63,11 @@ router.post('/new', forceAuthorized, requireParam('advertisement'), function (re
       return {enable: false, start: '00:00', end: '00:00'};
     }
   })
-  new Advertisement(advertisement)
-      .save()
+  currentUser.getTokenBalance(advertisement.token.code)
+      .then(({balance}) => {
+        advertisement.ownerBalanceEnough = advertisement.type === 'buy' || balance > advertisement.limitMax;
+        return new Advertisement(advertisement).save()
+      })
       .then(() => {
         res.send({
           success: true
@@ -77,7 +82,7 @@ router.post('/new', forceAuthorized, requireParam('advertisement'), function (re
       })
 });
 
-router.get('/list', function (req, res, next) {
+router.get('/list', forceAuthorized, function (req, res, next) {
   Advertisement.find({user: req.data.user._id})
       .populate('token')
       .populate('currency')
@@ -114,6 +119,14 @@ router.all('/get', requireParam(['id:objectId']), function (req, res, next) {
         message: error.message || 'server side error',
         error
       }))
+})
+
+router.post('/test-bind', bind('advertisement:Advertisement'), function (req, res, next) {
+  let advertisement = req.body.advertisement;
+  res.send({
+    success: true,
+    advertisement
+  });
 })
 
 module.exports = router;

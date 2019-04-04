@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-export default function (base64Image, width, height) {
+module.exports = function (base64Image, width, height) {
   return new Promise(function (resolve, reject) {
     let parts = base64Image.split(';');
     let mimType = parts[0].split(':')[1];

@@ -2,12 +2,9 @@
   "name": "locarERC20-back",
   "version": "0.1.0",
   "description": "Starter project for an ES6 RESTful Express API",
-  "main": "dist",
+  "main": "start",
   "scripts": {
-    "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0\"",
-    "build": "babel src -s -D -d dist --presets es2015,stage-0",
-    "start": "node dist",
-    "prestart": "npm run -s build",
+    "start": "nodemon ./src/index.js",
     "test": "eslint src"
   },
   "eslintConfig": {
@@ -35,8 +32,10 @@
     "body-parser": "^1.13.3",
     "compression": "^1.5.2",
     "cors": "^2.7.1",
+    "cron": "^1.7.0",
     "crypto": "^1.0.1",
     "dotenv": "^6.2.0",
+    "events": "^3.0.0",
     "express": "^4.13.3",
     "express-jwt": "^5.3.1",
     "image-to-base64": "^2.0.1",

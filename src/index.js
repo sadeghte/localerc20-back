@@ -1,15 +1,17 @@
 require('dotenv').config();
 require('./js-extend');
-import http from 'http';
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import bodyParser from 'body-parser';
-import initializeDb from './db';
-import middleware from './middleware';
-import Authenticate from './middleware/Authenticate';
-import api from './api';
-import config from './config.json';
+const croneJobs = require('./cron-jobs');
+const http = require('http');
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const initializeDb = require('./db');
+const middleware = require('./middleware');
+const Authenticate = require('./middleware/Authenticate');
+const api = require('./api');
+const config = require('./config.json');
+require('./coreEventHandlers');
 
 let app = express();
 app.server = http.createServer(app);
@@ -40,7 +42,8 @@ initializeDb( db => {
   });
 	app.server.listen(process.env.HTTP_PORT || config.port, () => {
 		console.log(`Started on port ${app.server.address().port}`);
+		croneJobs.init();
 	});
 });
 
-export default app;
+module.exports = app;

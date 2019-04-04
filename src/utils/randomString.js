@@ -1,4 +1,4 @@
-export default function (length=16, possibleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") {
+module.exports = function (length=16, possibleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") {
   var text = "";
 
   for (var i = 0; i < length; i++)

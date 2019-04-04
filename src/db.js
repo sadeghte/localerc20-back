@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-export default callback => {
+module.exports = callback => {
 	// connect to a database if needed, then pass it to `callback`:
   mongoose.connect(process.env.MONGOOSE_CS, {useNewUrlParser: true});
   let db = mongoose.connection;

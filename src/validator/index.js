@@ -1,13 +1,13 @@
-import objectId from './objectId';
-import string from './string';
-import email from './email';
-import number from './number';
+const objectId = require('./objectId');
+const string = require('./string');
+const email = require('./email');
+const number = require('./number');
+const address = require('./address');
 
-export {objectId, string, email, number};
-
-export default {
+module.exports = {
   objectId,
   string,
   email,
-  number
+  number,
+  address
 }
