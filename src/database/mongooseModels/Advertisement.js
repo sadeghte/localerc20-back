@@ -60,6 +60,10 @@ let currencySchema = mongoose.Schema({
   limitMin: {type: Number, default: 0},
   limitMax: {type: Number, default: 100},
   enable: {type: Boolean, default: true},
+  ownerBalanceEnough:{
+    type: Boolean,
+    default: false
+  },
   openingHours: {
     type: [dayOpeningHourSchema],
     validate: {

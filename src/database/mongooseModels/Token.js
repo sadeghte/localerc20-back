@@ -29,6 +29,7 @@ tokenSchema.pre('save', function(next){
   }else{
     allDocuments.push(this);
   }
+  next();
 });
 
 const Model = module.exports = mongoose.model('crypto-token', tokenSchema);
