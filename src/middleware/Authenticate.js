@@ -35,14 +35,14 @@ function mapTokenToUser(token) {
 }
 
 exports.setUser = function (req, res, next) {
+  if(!req.data)
+    req.data = {};
   let token = req.header('authorization');
   if (!!token && token.substr(0, 6).toLowerCase() === 'bearer')
     token = token.substr(7);
   if (token) {
     mapTokenToUser(token)
         .then(user => {
-          if(!req.data)
-            req.data = {};
           req.data.user = user;
           next();
         })

@@ -13,7 +13,7 @@ module.exports = function () {
       let paramValidator = paramParts[1];
       let error = applyValidator(req.body, param, paramValidator);
       if(error) {
-        return res.status(400).json({
+        return res.status(500).send({
           success: false,
           message: "Request param validation failed at [" + param + "] \n\t " + error
         });
