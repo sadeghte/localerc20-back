@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const EventBus = require('../../eventBus');
 require('./TradeMessage');
 
 const STATUS_REQUEST = 'request';
@@ -9,7 +10,7 @@ const STATUS_DISPUTE = 'dispute';
 const STATUS_CANCEL = 'cancel';
 const STATUS_DONE = 'done';
 
-let currencySchema = mongoose.Schema({
+let modelSchema = mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId, ref: 'user',
     required:[true, 'User required for creating Trade.']
@@ -36,17 +37,21 @@ let currencySchema = mongoose.Schema({
 //   this.populate('messages').populate('user');
 // });
 
-currencySchema.virtual('messages', {
+modelSchema.virtual('messages', {
   ref: 'trade-message', // The model to use
   localField: '_id', // Find people where `localField`
   foreignField: 'trade', // is equal to `foreignField`
   // count: true // And only get the number of docs
 });
 
-currencySchema.set('toObject', { virtuals: true });
-currencySchema.set('toJSON', { virtuals: true });
+modelSchema.set('toObject', { virtuals: true });
+modelSchema.set('toJSON', { virtuals: true });
 
-let Model = module.exports = mongoose.model('trade', currencySchema);
+modelSchema.post('save', function(doc) {
+  EventBus.emit(EventBus.EVENT_TRADE_POST_SAVE, doc);
+});
+
+let Model = module.exports = mongoose.model('trade', modelSchema);
 
 module.exports.STATUS_REQUEST = STATUS_REQUEST;
 module.exports.STATUS_START = STATUS_START;

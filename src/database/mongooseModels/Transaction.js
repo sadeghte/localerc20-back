@@ -49,7 +49,7 @@ let modelSchema = mongoose.Schema({
 }, {timestamps: true});
 
 modelSchema.post('save', function(doc) {
-  EventBus.emit('transaction-post-save', doc);
+  EventBus.emit(EventBus.EVENT_TRANSACTION_POST_SAVE, doc);
 });
 
 const Model = module.exports = mongoose.model('transaction', modelSchema);

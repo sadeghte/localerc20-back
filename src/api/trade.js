@@ -64,6 +64,14 @@ router.post('/list',forceAuthorized, function (req, res, next) {
       })
 })
 
+function checkOwnerBalance(adv, user) {
+  return new Promise(function (resolve, reject) {
+    if(adv.type === Advertisement.TYPE_SELL) {
+      if(!adv.ownerBalanceEnough)
+        reject({message: 'Advertisement owner has not enough balance. search again and try another one.'});
+    }
+  })
+}
 router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 'count:number'), function (req, res, next) {
   let currentUser = req.data.user;
   let message = req.body.message || [];
@@ -72,15 +80,19 @@ router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 
   let advertisement = null;
   let newTrade = null;
   Advertisement.findOne({_id: req.body.advertisementId})
+      .populate('user')
       .then(adv => {
         advertisement = adv;
+        return checkOwnerBalance(adv, currentUser);
         // TODO: commented for test the system. after test, uncomment this 2 lines
         // if(adv.user.toString() === currentUser._id.toString())
         //   throw {message: 'User cannot trade with him/her self.'};
+      })
+      .then(() => {
         let tradeData = {
           user: currentUser,
-          advertisementOwner: adv.user,
-          advertisement: adv,
+          advertisementOwner: advertisement.user,
+          advertisement: advertisement,
           tokenCount: count,
           status: Trade.STATUS_REQUEST
         };

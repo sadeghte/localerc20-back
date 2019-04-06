@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+const TYPE_SELL = 'sell';
+const TYPE_BUY = 'buy';
+
 const dayOpeningHourSchema = new mongoose.Schema({
   start: {
     type: String,
@@ -31,7 +34,7 @@ let currencySchema = mongoose.Schema({
   },
   type: {
     type:String,
-    enum:['buy','sell'],
+    enum:[TYPE_BUY, TYPE_SELL],
     required:[true, 'Advertisement type required.']
   },
   token: {
@@ -80,3 +83,6 @@ let currencySchema = mongoose.Schema({
 }, {timestamps: true});
 
 module.exports = mongoose.model('advertisement', currencySchema);
+
+module.exports.TYPE_BUY = TYPE_BUY;
+module.exports.TYPE_SELL= TYPE_SELL;

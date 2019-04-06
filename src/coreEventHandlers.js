@@ -1,7 +1,7 @@
 const EventBus = require('./eventBus');
 const User = require('./database/mongooseModels/User')
 
-EventBus.on('transaction-post-save', function(tx){
+EventBus.on(EventBus.EVENT_TRANSACTION_POST_SAVE, function(tx){
   let tUsers;
   User.find({$or:[
     {address: tx.from},
