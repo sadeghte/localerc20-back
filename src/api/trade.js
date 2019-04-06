@@ -70,6 +70,8 @@ function checkOwnerBalance(adv, user) {
       if(!adv.ownerBalanceEnough)
         reject({message: 'Advertisement owner has not enough balance. search again and try another one.'});
     }
+    // TODO: Buy advertisement balance not checked
+    resolve(true);
   })
 }
 router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 'count:number'), function (req, res, next) {
