@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Token = require('./Token');
 
 const TYPE_SELL = 'sell';
 const TYPE_BUY = 'buy';
@@ -27,7 +28,7 @@ const dayOpeningHourSchema = new mongoose.Schema({
   enable: Boolean
 }, {_id: false});
 
-let currencySchema = mongoose.Schema({
+let currentSchema = mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId, ref: 'user',
     required:[true, 'Advertisement user required.']
@@ -79,10 +80,14 @@ let currencySchema = mongoose.Schema({
     },
     required:[true, 'Advertisement openingHours required.']
   },
-  terms:{type: String, default: ""}
+  terms:{type: String, default: ""},
+  filters: {
+    token: {type: String, required: [true, "Advertisement filters.token required"]},
+    currency: {type: String, required: [true, "Advertisement filters.currency required"]}
+  }
 }, {timestamps: true});
 
-module.exports = mongoose.model('advertisement', currencySchema);
+module.exports = mongoose.model('advertisement', currentSchema);
 
 module.exports.TYPE_BUY = TYPE_BUY;
 module.exports.TYPE_SELL= TYPE_SELL;

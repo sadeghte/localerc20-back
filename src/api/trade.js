@@ -2,6 +2,7 @@ const randomString = require("../utils/randomString");
 const { Router } = require('express');
 const mongoose = require('mongoose');
 const Advertisement = require('../database/mongooseModels/Advertisement');
+const Token = require('../database/mongooseModels/Token');
 const {forceAuthorized} = require('../middleware/Authenticate');
 const Trade = require('../database/mongooseModels/Trade');
 const Transaction = require('../database/mongooseModels/Transaction');
@@ -10,26 +11,40 @@ const requireParam = require('../middleware/requestParamRequire');
 let router = Router();
 
 router.post('/search', function (req, res, next) {
-  let sellAdvertisements = [], buyAdvertisements = [];
-  Advertisement.find({type: 'sell', ownerBalanceEnough: true})
-      .limit(5)
+  let filters = req.body.filters || {};
+  console.log('user filters: ', filters);
+  let query = {};
+  if(filters.type)
+    query.type = filters.type;
+  if(filters.type === Advertisement.TYPE_SELL)
+    query.ownerBalanceEnough = true;
+  if(filters.token){
+    query['filters.token'] = filters.token;
+  }
+  else if(filters.tokens && Array.isArray(filters.tokens) && filters.tokens.length > 0){
+    query['filters.token'] = {$in: filters.tokens};
+  }
+  if(filters.currency){
+    query['filters.currency'] = filters.currency;
+  }
+  else if(filters.currencies && Array.isArray(filters.currencies) && filters.currencies.length > 0){
+    query['filters.currency'] = {$in: filters.currencies};
+  }
+  if(filters.amount && parseFloat(filters.amount) > 0){
+    let amount = parseFloat(filters.amount);
+    query.limitMin = {$lte: amount};
+    query.limitMax = {$gte: amount};
+  }
+  console.log('query: ', query);
+  Advertisement.find(query)
+      .limit(25)
       .populate('user')
       .populate('token')
       .populate('currency')
-      .then(advs => {
-        sellAdvertisements = advs;
-        return Advertisement.find({type: 'buy', ownerBalanceEnough: true})
-            .limit(5)
-            .populate('user')
-            .populate('token')
-            .populate('currency')
-      })
-      .then(advs => {
-        buyAdvertisements = advs;
+      .then(advertisements => {
         res.send({
           success: true,
-          sellAdvertisements,
-          buyAdvertisements
+          advertisements
         })
       })
       .catch(error => {
@@ -64,16 +79,30 @@ router.post('/list',forceAuthorized, function (req, res, next) {
       })
 })
 
-function checkOwnerBalance(adv, user) {
+function checkSellerBalance(adv, user, tradeTokenCount) {
   return new Promise(function (resolve, reject) {
     if(adv.type === Advertisement.TYPE_SELL) {
       if(!adv.ownerBalanceEnough)
-        reject({message: 'Advertisement owner has not enough balance. search again and try another one.'});
+        return reject({message: 'Advertisement owner has not enough balance. search again and try another one.'});
+      else
+        resolve(true);
+    }else{
+      user.getTokenBalance(adv.token.code)
+          .then(({balance}) => {
+            if(balance < tradeTokenCount) {
+              console.log(`user has not enough token. token: ${adv.token.code} user balance: ${balance} - trade token count: ${tradeTokenCount}`);
+              reject({message: 'You has not enough balance. decrease token count.'});
+            }else
+              resolve(true);
+          })
+          .catch(err => {
+            reject({message: err.message || 'Server side error.', error: err});
+          })
     }
     // TODO: Buy advertisement balance not checked
-    resolve(true);
   })
 }
+
 router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 'count:number'), function (req, res, next) {
   let currentUser = req.data.user;
   let message = req.body.message || [];
@@ -83,9 +112,10 @@ router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 
   let newTrade = null;
   Advertisement.findOne({_id: req.body.advertisementId})
       .populate('user')
+      .populate('token')
       .then(adv => {
         advertisement = adv;
-        return checkOwnerBalance(adv, currentUser);
+        return checkSellerBalance(adv, currentUser, count);
         // TODO: commented for test the system. after test, uncomment this 2 lines
         // if(adv.user.toString() === currentUser._id.toString())
         //   throw {message: 'User cannot trade with him/her self.'};
@@ -201,6 +231,9 @@ router.post('/start', forceAuthorized, requireParam('id:objectId'), function (re
           throw {message: "Invalid trade status. only a requested trade, can start."};
         if(currentUser._id.toString() !== trade.advertisementOwner.toString())
           throw {message: "Access denied. only advertisement owner, can start a trade"};
+        return checkSellerBalance(trade.advertisement, currentUser, trade.tokenCount);
+      })
+      .then(() => {
         trade.status = Trade.STATUS_START;
         trade.startTime = Date.now();
         return trade.save();

@@ -21,6 +21,11 @@ function findByCode(code){
   return allDocuments[index];
 }
 
+function findById(_id){
+  let index = allDocuments.findIndex(item => item._id.toString() === _id.toString());
+  return allDocuments[index];
+}
+
 // update token list when tokens changed.
 tokenSchema.pre('save', function(next){
   let index = allDocuments.findIndex(item => item._id === this._id);
@@ -35,6 +40,7 @@ tokenSchema.pre('save', function(next){
 const Model = module.exports = mongoose.model('crypto-token', tokenSchema);
 module.exports.validateCode = validateCode;
 module.exports.findByCode = findByCode;
+module.exports.findById = findById;
 
 // preload tokens
 Model.find({}).then(documents => {
