@@ -13,6 +13,8 @@ let router = Router();
 router.post('/search', function (req, res, next) {
   let filters = req.body.filters || {};
   console.log('user filters: ', filters);
+  let skip = parseInt(req.body.skip) || 0;
+  let limit = parseInt(req.body.limit) || 20;
   let query = {};
   if(filters.type)
     query.type = filters.type;
@@ -37,7 +39,7 @@ router.post('/search', function (req, res, next) {
   }
   console.log('query: ', query);
   Advertisement.find(query)
-      .limit(25)
+      .limit(limit)
       .populate('user')
       .populate('token')
       .populate('currency')
@@ -60,9 +62,10 @@ router.post('/list',forceAuthorized, function (req, res, next) {
   let currentUser = req.data.user;
   Trade.find({$or: [
       {user: currentUser._id},
-      {trader: currentUser._id},
+      {advertisementOwner: currentUser._id},
   ]})
       .populate({path: 'advertisement', populate: {path: 'token'}})
+      .populate('user')
       .populate('advertisementOwner')
       .then(trades => {
         res.send({
@@ -239,28 +242,14 @@ router.post('/start', forceAuthorized, requireParam('id:objectId'), function (re
         return trade.save();
       })
       .then(() => {
-        // advertisement owner transaction
         return new Transaction({
-          type: trade.advertisement.type === 'sell' ? Transaction.TYPE_SELL : Transaction.TYPE_BUY,
+          type: Transaction.TYPE_TRADE,
           amount: trade.tokenCount,
           token: trade.advertisement.token.code,
           status: Transaction.STATUS_NEW,
           txHash: '0x' + randomString(64,'0123456789abcdef'),
           from: trade.advertisement.type === 'sell' ? currentUser.address : trade.user.address,
           to: trade.advertisement.type === 'sell' ? trade.user.address : currentUser.address,
-          txTime: Date.now(),
-        }).save();
-      })
-      .then(() => {
-        // trade owner transaction
-        return new Transaction({
-          type: trade.advertisement.type === 'sell' ? Transaction.TYPE_BUY : Transaction.TYPE_SELL,
-          amount: trade.tokenCount,
-          token: trade.advertisement.token.code,
-          status: Transaction.STATUS_NEW,
-          txHash: '0x' + randomString(64,'0123456789abcdef'),
-          from: trade.advertisement.type === 'sell' ? trade.user.address : currentUser.address,
-          to: trade.advertisement.type === 'sell' ? currentUser.address : trade.user.address,
           txTime: Date.now(),
         }).save();
       })

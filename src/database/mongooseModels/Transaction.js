@@ -4,8 +4,7 @@ const EventBus = require('../../eventBus');
 
 const TYPE_DEPOSIT = 'deposit';
 const TYPE_WITHDRAW = 'withdraw';
-const TYPE_BUY = 'buy';
-const TYPE_SELL = 'sell';
+const TYPE_TRADE = 'trade';
 
 const STATUS_NEW = 'new';
 const STATUS_PENDING = 'pending';
@@ -15,7 +14,7 @@ const STATUS_CANCEL = 'cancel';
 let modelSchema = mongoose.Schema({
   type: {
     type: String,
-    enum: [TYPE_DEPOSIT, TYPE_WITHDRAW, TYPE_BUY, TYPE_SELL],
+    enum: [TYPE_DEPOSIT, TYPE_WITHDRAW, TYPE_TRADE],
     required:[true, 'Transaction type required.']
   },
   status: {
@@ -56,8 +55,7 @@ const Model = module.exports = mongoose.model('transaction', modelSchema);
 
 module.exports.TYPE_DEPOSIT = TYPE_DEPOSIT;
 module.exports.TYPE_WITHDRAW = TYPE_WITHDRAW;
-module.exports.TYPE_BUY = TYPE_BUY;
-module.exports.TYPE_SELL = TYPE_SELL;
+module.exports.TYPE_TRADE = TYPE_TRADE;
 
 module.exports.STATUS_NEW = STATUS_NEW;
 module.exports.STATUS_PENDING = STATUS_PENDING;

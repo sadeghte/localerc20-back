@@ -8,6 +8,7 @@ let userSchema = mongoose.Schema({
   username: {type:String, default: "", trim: true, unique: true},
   firstName: {type:String, default: "", trim: true},
   lastName: {type:String, default: "", trim: true},
+  about: {type:String, default: ''},
   avatar: {type:String, default: ''},
   brightIdPublicKey: String,
   brightIdScore: {type: Number, default: 0},
@@ -21,7 +22,8 @@ let userSchema = mongoose.Schema({
     unique: true,
     sparse: true
   },
-  score: {type: Number, default: 0}
+  score: {type: Number, default: 0},
+  lastSeen: {type: Date, default: null}
 }, {
   timestamps: true,
   toObject: {
@@ -52,13 +54,17 @@ userSchema.methods.getBalance = function () {
             balance[tx.token] = 0;
           switch (tx.type){
             case Transaction.TYPE_DEPOSIT:
-            case Transaction.TYPE_BUY:
               if(tx.status === Transaction.STATUS_DONE)
                 balance[tx.token] += tx.amount;
               break;
-            case Transaction.TYPE_SELL:
             case Transaction.TYPE_WITHDRAW:
               if(tx.status !== Transaction.STATUS_CANCEL)
+                balance[tx.token] -= tx.amount;
+              break;
+            case Transaction.TYPE_TRADE:
+              if(tx.to === this.address && tx.status === Transaction.STATUS_DONE)
+                balance[tx.token] += tx.amount;
+              else if(tx.from === this.address && tx.status !== Transaction.STATUS_CANCEL)
                 balance[tx.token] -= tx.amount;
               break;
           }
@@ -86,13 +92,17 @@ userSchema.methods.getTokenBalance = function (tokenCode) {
         transactions.map(tx => {
           switch (tx.type){
             case Transaction.TYPE_DEPOSIT:
-            case Transaction.TYPE_BUY:
               if(tx.status === Transaction.STATUS_DONE)
                 balance += tx.amount;
               break;
-            case Transaction.TYPE_SELL:
             case Transaction.TYPE_WITHDRAW:
               if(tx.status !== Transaction.STATUS_CANCEL)
+                balance -= tx.amount;
+              break;
+            case Transaction.TYPE_TRADE:
+              if(tx.to === this.address && tx.status === Transaction.STATUS_DONE)
+                balance += tx.amount;
+              else if(tx.from === this.address && tx.status !== Transaction.STATUS_CANCEL)
                 balance -= tx.amount;
               break;
           }

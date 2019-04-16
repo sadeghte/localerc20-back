@@ -4,6 +4,7 @@ const User  = require('../database/mongooseModels/User');
 const Token  = require('../database/mongooseModels/Token');
 const Transaction  = require('../database/mongooseModels/Transaction');
 const requireParam  = require('../middleware/requestParamRequire');
+const objUtil = require('../utils/object');
 let router = Router();
 
 function checkUsernameAvailable(username){
@@ -25,11 +26,29 @@ function checkEmailAvailable(email){
       })
 }
 
-router.all('/info', function (req, res, next) {
-  res.json({
-    success: true,
-    user: req.data.user
-  });
+router.all('/get-info', function (req, res, next) {
+  let userId = req.body.userId;
+  if(!userId || (userId == req.data.user._id.toString())) {
+    res.json({
+      success: true,
+      user: req.data.user
+    });
+  }else{
+    User.findOne({_id: userId})
+        .then(user => {
+          res.json({
+            success: true,
+            user: objUtil.mask(user, ["email",'emailConfirmed', 'mobile', 'mobileConfirmed', 'brightIdPublicKey'],true)
+          });
+        })
+        .catch(error => {
+          res.status(500).json({
+            success: false,
+            message: error.message || "Server side error",
+            error
+          });
+        })
+  }
 });
 
 router.post('/check-username', requireParam('username:string'), function (req, res, next) {
@@ -121,6 +140,8 @@ router.post('/update', function (req, res, next) {
     update.firstName = req.body.firstName;
   if(req.body.lastName !== undefined && typeof req.body.lastName === 'string')
     update.lastName = req.body.lastName;
+  if(req.body.about !== undefined && typeof req.body.about === 'string')
+    update.about = req.body.about;
   if(req.body.country !== undefined && typeof req.body.country === 'string')
     update.country = req.body.country;
   if(req.body.mobile !== undefined && typeof req.body.mobile === 'string') {

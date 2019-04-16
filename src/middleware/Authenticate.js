@@ -21,13 +21,16 @@ function mapTokenToUser(token) {
     jwt.verify(token, process.env.JWT_AUTH_SECRET, function (err, decoded) {
       if (err)
         return resolve(null);
+      let currentUser = null;
       User.findOne({_id: mongoose.Types.ObjectId(decoded.id)})
           .then(user => {
-            if (user)
-              resolve(user);
-            else
-              resolve(null);
+            if (user) {
+              user.lastSeen = Date.now();
+              currentUser = user;
+              return user.save();
+            }
           })
+          .then(() => resolve(currentUser))
           .catch(err => resolve(null))
 
     });
