@@ -1,28 +1,28 @@
 const randomString = require("../utils/randomString");
-const { Router } = require('express');
-const User  = require('../database/mongooseModels/User');
-const Token  = require('../database/mongooseModels/Token');
-const Transaction  = require('../database/mongooseModels/Transaction');
-const Feedback  = require('../database/mongooseModels/Feedback');
-const requireParam  = require('../middleware/requestParamRequire');
+const {Router} = require('express');
+const User = require('../database/mongooseModels/User');
+const Token = require('../database/mongooseModels/Token');
+const Transaction = require('../database/mongooseModels/Transaction');
+const Feedback = require('../database/mongooseModels/Feedback');
+const requireParam = require('../middleware/requestParamRequire');
 const objUtil = require('../utils/object');
 let router = Router();
 
-function checkUsernameAvailable(username){
-  if(username.length < 6){
+function checkUsernameAvailable(username) {
+  if (username.length < 6) {
     return Promise.reject({message: "Username most be at least 6 characters."});
   }
-  return User.findOne({username: new RegExp(`^${username}$`,"i")})
+  return User.findOne({username: new RegExp(`^${username}$`, "i")})
       .then(user => {
-        if(user)
+        if (user)
           throw {message: 'This username already taken'}
       })
 }
 
-function checkEmailAvailable(email){
-  return User.findOne({email: new RegExp(`^${email}$`,"i")})
+function checkEmailAvailable(email) {
+  return User.findOne({email: new RegExp(`^${email}$`, "i")})
       .then(user => {
-        if(user)
+        if (user)
           throw {message: 'This email already registered'}
       })
 }
@@ -30,40 +30,37 @@ function checkEmailAvailable(email){
 router.all('/get-info', function (req, res, next) {
   let userId = req.body.userId;
   let user = null;
-  if(!userId) {
-    res.json({
-      success: true,
-      user: req.data.user
-    });
-  }else{
-    User.findOne({_id: userId})
-        .then(_user => {
-          user = _user;
-          if(req.body.feedback){
-            console.log('find feedbackes');
-            return Feedback.find({user: user._id})
-          }else{
-            console.log('no feedbackes');
-            return null;
-          }
-        })
-        .then(feedbacks => {
-          let response = {
-            success: true,
-            user
-          };
-          if(req.body.feedback)
-            response.feedbacks = feedbacks;
-          res.json(response);
-        })
-        .catch(error => {
-          res.status(500).json({
-            success: false,
-            message: error.message || "Server side error",
-            error
-          });
-        })
+  let userInfoPromise = null;
+  if (!userId) {
+    userInfoPromise = Promise.resolve(req.data.user);
+  } else {
+    userInfoPromise = User.findOne({_id: userId});
   }
+  userInfoPromise
+      .then(_user => {
+        user = _user;
+        if (req.body.feedback) {
+          return Feedback.find({user: user._id})
+        } else {
+          return null;
+        }
+      })
+      .then(feedbacks => {
+        let response = {
+          success: true,
+          user
+        };
+        if (req.body.feedback)
+          response.feedbacks = feedbacks;
+        res.json(response);
+      })
+      .catch(error => {
+        res.status(500).json({
+          success: false,
+          message: error.message || "Server side error",
+          error
+        });
+      })
 });
 
 router.post('/check-username', requireParam('username:string'), function (req, res, next) {
@@ -151,19 +148,21 @@ router.post('/update-email', requireParam('email:email'), function (req, res, ne
 router.post('/update', function (req, res, next) {
   let user = req.data.user;
   let update = {};
-  if(req.body.firstName !== undefined && typeof req.body.firstName === 'string')
+  if (req.body.firstName !== undefined && typeof req.body.firstName === 'string')
     update.firstName = req.body.firstName;
-  if(req.body.lastName !== undefined && typeof req.body.lastName === 'string')
+  if (req.body.lastName !== undefined && typeof req.body.lastName === 'string')
     update.lastName = req.body.lastName;
-  if(req.body.about !== undefined && typeof req.body.about === 'string')
+  if (req.body.about !== undefined && typeof req.body.about === 'string')
     update.about = req.body.about;
-  if(req.body.country !== undefined && typeof req.body.country === 'string')
+  if (req.body.country !== undefined && typeof req.body.country === 'string')
     update.country = req.body.country;
-  if(req.body.mobile !== undefined && typeof req.body.mobile === 'string') {
+  if (req.body.mobile !== undefined && typeof req.body.mobile === 'string') {
     update.mobile = req.body.mobile;
     update.mobileConfirmed = false;
   }
-  Object.keys(update).map(key => {user[key] = update[key]});
+  Object.keys(update).map(key => {
+    user[key] = update[key]
+  });
   user.save();
   res.send({
     success: true,
@@ -194,12 +193,12 @@ router.post('/transactions', function (req, res, next) {
       })
 })
 
-router.post('/fake-deposit', requireParam('token','amount:number'), function (req, res, next) {
+router.post('/fake-deposit', requireParam('token', 'amount:number'), function (req, res, next) {
   let token = Token.findByCode(req.body.token);
   let amount = req.body.amount;
   let currentUser = req.data.user;
 
-  if(!token){
+  if (!token) {
     return res.send({
       success: false,
       message: 'Token invalid.'
@@ -211,8 +210,8 @@ router.post('/fake-deposit', requireParam('token','amount:number'), function (re
     amount: amount,
     token: token.code,
     status: Transaction.STATUS_DONE,
-    txHash: '0x' + randomString(64,'0123456789abcdef'),
-    from: '0x' + randomString(40,'0123456789abcdef'),
+    txHash: '0x' + randomString(64, '0123456789abcdef'),
+    from: '0x' + randomString(40, '0123456789abcdef'),
     to: currentUser.address,
     txTime: Date.now(),
   }).save()
@@ -233,13 +232,13 @@ router.post('/fake-deposit', requireParam('token','amount:number'), function (re
       })
 })
 
-router.post('/withdraw', requireParam('token','amount:number', 'to:address'), function (req, res, next) {
+router.post('/withdraw', requireParam('token', 'amount:number', 'to:address'), function (req, res, next) {
   let token = Token.findByCode(req.body.token);
   let amount = req.body.amount;
   let to = req.body.to;
   let currentUser = req.data.user;
 
-  if(!token){
+  if (!token) {
     return res.send({
       success: false,
       message: 'Token invalid.'
@@ -248,16 +247,16 @@ router.post('/withdraw', requireParam('token','amount:number', 'to:address'), fu
 
   currentUser.getBalance()
       .then(({balance}) => {
-        if(amount <= 0)
+        if (amount <= 0)
           throw {message: 'Token amount most be positive value'};
-        if(amount > balance[token.code])
+        if (amount > balance[token.code])
           throw {message: 'Token balance is not sufficient'};
         return new Transaction({
           type: Transaction.TYPE_WITHDRAW,
           amount: amount,
           token: token.code,
           status: Transaction.STATUS_DONE,
-          txHash: '0x' + randomString(64,'0123456789abcdef'),
+          txHash: '0x' + randomString(64, '0123456789abcdef'),
           from: currentUser.address,
           to: to,
           txTime: Date.now(),
