@@ -7,6 +7,7 @@ const {forceAuthorized} = require('../middleware/Authenticate');
 const Trade = require('../database/mongooseModels/Trade');
 const Transaction = require('../database/mongooseModels/Transaction');
 const TradeMessage = require('../database/mongooseModels/TradeMessage');
+const Feedback = require('../database/mongooseModels/Feedback');
 const requireParam = require('../middleware/requestParamRequire');
 let router = Router();
 
@@ -118,10 +119,9 @@ router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 
       .populate('token')
       .then(adv => {
         advertisement = adv;
+        if(adv.user.toString() === currentUser._id.toString())
+          throw {message: 'User cannot trade with him/her self.'};
         return checkSellerBalance(adv, currentUser, count);
-        // TODO: commented for test the system. after test, uncomment this 2 lines
-        // if(adv.user.toString() === currentUser._id.toString())
-        //   throw {message: 'User cannot trade with him/her self.'};
       })
       .then(() => {
         let tradeData = {
@@ -199,15 +199,25 @@ router.post('/message', forceAuthorized, requireParam('tradeId:objectId', 'type:
 })
 
 router.post('/get-info', forceAuthorized, requireParam('id:objectId'), function (req, res, next) {
+  let trade = null;
+  let currentUser = req.data.user;
   Trade.findOne({_id: req.body.id})
       .populate('user')
-      .populate('advertisement')
+      .populate('advertisement advertisementOwner')
       .populate('messages')
       .populate({path: 'messages.sender', model: 'user'})
-      .then(trade => {
+      .then(_trade => {
+        trade = _trade;
+        return Feedback.findOne({
+          sender: currentUser._id,
+          trade: _trade._id
+        });
+      })
+      .then(feedback => {
         res.send({
           success: true,
           trade,
+          feedback
         })
       })
       .catch(error => {
@@ -423,6 +433,56 @@ router.post('/dispute', forceAuthorized, requireParam('id:objectId'), function (
       })
       .catch(error => {
         console.log(error.message);
+        res.status(500).send({
+          success: false,
+          message: error.message || 'server side error',
+          error
+        })
+      })
+})
+
+router.post('/post-feedback', forceAuthorized, requireParam('tradeId:objectId','star:number'), function (req, res, next) {
+  let currentUser = req.data.user;
+  let trade = null;
+  let star = req.body.star;
+  if(star < 1 || star > 5)
+    return {success: false, message: "invalid feedback star"};
+  let comment = req.body.comment || "";
+  Trade.findOne({_id: req.body.tradeId})
+      .then(trd => {
+        if(!trd)
+          throw {message: 'Invalid tradeId.'}
+        trade = trd;
+        if(trade.status === Trade.STATUS_REQUEST)
+          throw {message: "Invalid trade status."};
+        return Feedback.findOne({
+          sender: currentUser._id,
+          trade: trade._id
+        });
+      })
+      .then(feedback => {
+        let sender = currentUser._id;
+        let reciever = currentUser._id.toString() === trade.user.toString() ? trade.advertisementOwner : trade.user;
+        if(feedback){
+          feedback.star = star;
+          feedback.comment = comment;
+          return feedback.save();
+        }else{
+          return new Feedback({
+            sender,
+            user: reciever,
+            trade: trade._id,
+            star,
+            comment
+          }).save();
+        }
+      })
+      .then(() => {
+        res.send({
+          success: true
+        })
+      })
+      .catch(error => {
         res.status(500).send({
           success: false,
           message: error.message || 'server side error',

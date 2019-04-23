@@ -23,6 +23,7 @@ function mapTokenToUser(token) {
         return resolve(null);
       let currentUser = null;
       User.findOne({_id: mongoose.Types.ObjectId(decoded.id)})
+          .select('+mobile +email')
           .then(user => {
             if (user) {
               user.lastSeen = Date.now();
@@ -47,12 +48,11 @@ exports.setUser = function (req, res, next) {
     mapTokenToUser(token)
         .then(user => {
           req.data.user = user;
-          next();
         })
         .catch(error => {
           console.log('error happenes', error);
-          next();
-        });
+        })
+        .then(next)
   }
   else
     next();

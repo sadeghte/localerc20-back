@@ -3,6 +3,7 @@ const { Router } = require('express');
 const User  = require('../database/mongooseModels/User');
 const Token  = require('../database/mongooseModels/Token');
 const Transaction  = require('../database/mongooseModels/Transaction');
+const Feedback  = require('../database/mongooseModels/Feedback');
 const requireParam  = require('../middleware/requestParamRequire');
 const objUtil = require('../utils/object');
 let router = Router();
@@ -28,18 +29,32 @@ function checkEmailAvailable(email){
 
 router.all('/get-info', function (req, res, next) {
   let userId = req.body.userId;
-  if(!userId || (userId == req.data.user._id.toString())) {
+  let user = null;
+  if(!userId) {
     res.json({
       success: true,
       user: req.data.user
     });
   }else{
     User.findOne({_id: userId})
-        .then(user => {
-          res.json({
+        .then(_user => {
+          user = _user;
+          if(req.body.feedback){
+            console.log('find feedbackes');
+            return Feedback.find({user: user._id})
+          }else{
+            console.log('no feedbackes');
+            return null;
+          }
+        })
+        .then(feedbacks => {
+          let response = {
             success: true,
-            user: objUtil.mask(user, ["email",'emailConfirmed', 'mobile', 'mobileConfirmed', 'brightIdPublicKey'],true)
-          });
+            user
+          };
+          if(req.body.feedback)
+            response.feedbacks = feedbacks;
+          res.json(response);
         })
         .catch(error => {
           res.status(500).json({

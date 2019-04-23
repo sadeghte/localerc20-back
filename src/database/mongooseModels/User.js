@@ -10,18 +10,14 @@ let userSchema = mongoose.Schema({
   lastName: {type:String, default: "", trim: true},
   about: {type:String, default: ''},
   avatar: {type:String, default: ''},
-  brightIdPublicKey: String,
+  brightIdPublicKey: {type: String, select: false},
   brightIdScore: {type: Number, default: 0},
   country: {type:String, default: "", trim: true},
-  email: {type:String, default: "", trim: true},
+  email: {type:String, default: "", trim: true, select: false},
   emailConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true},
-  mobile: {type:String, default: "", trim: true},
+  mobile: {type:String, default: "", trim: true, select: false},
   mobileConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true},
-  address: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
+  address: {type: String, unique: true, sparse: true},
   score: {type: Number, default: 0},
   lastSeen: {type: Date, default: null}
 }, {
