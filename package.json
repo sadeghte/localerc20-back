@@ -28,6 +28,7 @@
   "author": "Sadegh teymouri <sadeghte@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@rnbwd/tweetnacl": "git+https://github.com/BrightID/tweetnacl-js.git",
     "base64-js": "^1.3.0",
     "body-parser": "^1.13.3",
     "compression": "^1.5.2",
@@ -45,6 +46,7 @@
     "morgan": "^1.8.0",
     "node-fetch": "^2.3.0",
     "qrcode": "^1.3.3",
+    "randombytes": "^2.1.0",
     "resource-router-middleware": "^0.6.0",
     "sharp": "^0.21.3"
   },

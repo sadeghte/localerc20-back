@@ -3,7 +3,7 @@ const User = require('../database/mongooseModels/User')
 const UserSession = require('../database/mongooseModels/UserSession')
 const validation = require('../utils/validation');
 const encryptionUtil = require('../utils/encryption');
-const nacl = require('tweetnacl');
+const nacl = require('@rnbwd/tweetnacl');
 const randomBytes = require('randombytes');
 const qrcode = require("qrcode");
 const image2base64 = require('image-to-base64');
@@ -19,7 +19,7 @@ let router = Router();
 function getResponse(channel, aesKey){
   return new Promise(function (resolve, reject) {
     const ipAddress = process.env.UPLOAD_SERVER_IP;
-    fetch(`http://${ipAddress}/profile/download/${channel}`).then(res => res.json()).
+    fetch(`http://${ipAddress}/profile/download/${channel}?t=${Date.now()}`).then(res => res.json()).
     then(function(data){
       if(!data.data){
         return reject({message: 'Not confirmed yet'});

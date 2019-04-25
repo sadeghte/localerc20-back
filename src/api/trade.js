@@ -119,7 +119,7 @@ router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 
       .populate('token')
       .then(adv => {
         advertisement = adv;
-        if(adv.user.toString() === currentUser._id.toString())
+        if(adv.user._id.toString() === currentUser._id.toString())
           throw {message: 'User cannot trade with him/her self.'};
         return checkSellerBalance(adv, currentUser, count);
       })
