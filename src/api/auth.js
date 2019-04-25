@@ -19,7 +19,7 @@ let router = Router();
 function getResponse(channel, aesKey){
   return new Promise(function (resolve, reject) {
     const ipAddress = process.env.UPLOAD_SERVER_IP;
-    fetch(`http://${ipAddress}/profile/download/${channel}`).then(res => res.json()).
+    fetch(`http://${ipAddress}/profile/download/${channel}?t=${Date.now()}`).then(res => res.json()).
     then(function(data){
       if(!data.data){
         return reject({message: 'Not confirmed yet'});
