@@ -19,6 +19,7 @@ let userSchema = mongoose.Schema({
   mobileConfirmed: {type:mongoose.Schema.Types.Boolean, default: false, trim: true},
   address: {type: String, unique: true, sparse: true},
   score: {type: Number, default: 0},
+  confirmedTrades: {type: Number, default: 0},
   lastSeen: {type: Date, default: null}
 }, {
   timestamps: true,

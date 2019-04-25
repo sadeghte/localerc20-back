@@ -1,5 +1,6 @@
 const EventBus = require('./eventBus');
 const User = require('./database/mongooseModels/User')
+const Trade = require('./database/mongooseModels/Trade');
 const Feedback = require('./database/mongooseModels/Feedback')
 
 EventBus.on(EventBus.EVENT_TRANSACTION_POST_SAVE, function(tx){
@@ -52,5 +53,33 @@ EventBus.on(EventBus.EVENT_TRADE_POST_FEEDBACK, function(feedback){
       })
       .catch(error => {
         console.log(`Feedback(${feedback._id}): error in user score update`, error);
+      })
+})
+
+EventBus.on(EventBus.EVENT_TRADE_POST_SAVE, function(trade){
+  let userId1 = trade.user._id || trade.user;
+  let userId2 = trade.advertisementOwner._id || trade.advertisementOwner;
+  Trade.find({$or: [
+      {user: userId1},
+      {advertisementOwner: userId1},
+  ]})
+      .then(trades => {
+        return User.update({_id: userId1}, {confirmedTrades: trades.length});
+      })
+      .then(() => {
+        console.log(`Trade:[${trade._id}]: User(${userId1})> confirmedTrades updated.`);
+        return Trade.find({$or: [
+          {user: userId2},
+          {advertisementOwner: userId2},
+        ]})
+      })
+      .then(trades => {
+        return User.update({_id: userId2}, {confirmedTrades: trades.length});
+      })
+      .then(() => {
+        console.log(`Trade:[${trade._id}]: User(${userId2})> confirmedTrades updated.`);
+      })
+      .catch(error => {
+        console.log(`Trade:[${trade._id}]: Users.confirmedTrades update failed.`, error);
       })
 })
