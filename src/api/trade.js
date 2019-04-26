@@ -33,6 +33,12 @@ router.post('/search', function (req, res, next) {
   else if(filters.currencies && Array.isArray(filters.currencies) && filters.currencies.length > 0){
     query['filters.currency'] = {$in: filters.currencies};
   }
+  if(!!filters.brightid && parseFloat(filters.brightid) > 0){
+      query['filters.ownerBrightIdScore'] = {$gte: filters.brightid}
+  }
+  if(!!filters.feedback && parseFloat(filters.feedback) > 0){
+      query['filters.ownerFeedbackScore'] = {$gte: filters.feedback}
+  }
   if(filters.amount && parseFloat(filters.amount) > 0){
     let amount = parseFloat(filters.amount);
     query.limitMin = {$lte: amount};
@@ -254,6 +260,7 @@ router.post('/start', forceAuthorized, requireParam('id:objectId'), function (re
       .then(() => {
         return new Transaction({
           type: Transaction.TYPE_TRADE,
+          trade: trade._id,
           amount: trade.tokenCount,
           token: trade.advertisement.token.code,
           status: Transaction.STATUS_NEW,

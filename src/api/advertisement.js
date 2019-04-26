@@ -69,6 +69,8 @@ router.post('/new', forceAuthorized, requireParam('advertisement'), function (re
         advertisement.filters = {
           token: advertisement.token.code,
           currency: advertisement.currency.code,
+          ownerBrightIdScore: currentUser.brightIdScore,
+          ownerFeedbackScore: currentUser.score
         };
         return new Advertisement(advertisement).save()
       })

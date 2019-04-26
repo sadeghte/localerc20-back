@@ -14,6 +14,7 @@ const LoginTry = require('../database/mongooseModels/LoginTry');
 const Wallet = require('../database/mongooseModels/Wallet');
 const requireParam = require('../middleware/requestParamRequire');
 const ether = require('../utils/ethereum');
+const EventBus = require('../eventBus');
 let router = Router();
 
 function getResponse(channel, aesKey){
@@ -177,7 +178,12 @@ router.post('/login', requireParam('id:objectId'), function (req, res, next) {
         return user;
       })
       .then(user => {
-        user.brightIdScore = userInfo.score;
+        if(user.brightIdScore != userInfo.score){
+            user.brightIdScore = userInfo.score;
+            EventBus.emit(EventBus.EVENT_BRIGHTID_SCORE_UPDATED, user);
+        }else{
+            user.brightIdScore = userInfo.score;
+        }
         user.save();
         let session = new UserSession({
           user,

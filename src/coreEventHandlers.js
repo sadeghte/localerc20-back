@@ -1,6 +1,7 @@
 const EventBus = require('./eventBus');
 const User = require('./database/mongooseModels/User')
 const Trade = require('./database/mongooseModels/Trade');
+const Advertisement = require('./database/mongooseModels/Advertisement');
 const Feedback = require('./database/mongooseModels/Feedback')
 
 EventBus.on(EventBus.EVENT_TRANSACTION_POST_SAVE, function(tx){
@@ -48,6 +49,9 @@ EventBus.on(EventBus.EVENT_TRADE_POST_FEEDBACK, function(feedback){
         user.score = userScore;
         return user.save();
       })
+      .then(()=>{
+          return Advertisement.updateMany({user: userID}, {"filters.ownerFeedbackScore": userScore});
+      })
       .then(() => {
         console.log(`Feedback(${feedback._id}): users score updated`);
       })
@@ -64,7 +68,7 @@ EventBus.on(EventBus.EVENT_TRADE_POST_SAVE, function(trade){
       {advertisementOwner: userId1},
   ]})
       .then(trades => {
-        return User.update({_id: userId1}, {confirmedTrades: trades.length});
+        return User.updateOne({_id: userId1}, {confirmedTrades: trades.length});
       })
       .then(() => {
         console.log(`Trade:[${trade._id}]: User(${userId1})> confirmedTrades updated.`);
@@ -74,12 +78,22 @@ EventBus.on(EventBus.EVENT_TRADE_POST_SAVE, function(trade){
         ]})
       })
       .then(trades => {
-        return User.update({_id: userId2}, {confirmedTrades: trades.length});
+        return User.updateOne({_id: userId2}, {confirmedTrades: trades.length});
       })
       .then(() => {
         console.log(`Trade:[${trade._id}]: User(${userId2})> confirmedTrades updated.`);
       })
       .catch(error => {
         console.log(`Trade:[${trade._id}]: Users.confirmedTrades update failed.`, error);
+      })
+})
+
+EventBus.on(EventBus.EVENT_BRIGHTID_SCORE_UPDATED, function(user){
+  Advertisement.updateMany({user: user._id}, {"filters.ownerBrightIdScore": user.brightIdScore})
+      .then(() => {
+        console.log(`User(${user._id}): Advertisement score updated`);
+      })
+      .catch(error => {
+        console.log(`User(${user._id}): error in Advertisement score update`, error);
       })
 })

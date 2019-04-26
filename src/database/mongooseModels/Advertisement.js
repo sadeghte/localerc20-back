@@ -83,7 +83,9 @@ let currentSchema = mongoose.Schema({
   terms:{type: String, default: ""},
   filters: {
     token: {type: String, required: [true, "Advertisement filters.token required"]},
-    currency: {type: String, required: [true, "Advertisement filters.currency required"]}
+    currency: {type: String, required: [true, "Advertisement filters.currency required"]},
+    ownerBrightIdScore: {type: Number, default: 0},
+    ownerFeedbackScore: {type: Number, default: 0}
   }
 }, {timestamps: true});
 

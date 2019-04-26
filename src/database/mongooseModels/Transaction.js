@@ -39,6 +39,10 @@ let modelSchema = mongoose.Schema({
     type: String,
     required:[true, 'Transaction to required.']
   },
+  trade: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'trade',
+    default: null
+  },
   txTime: mongoose.Schema.Types.Date,
   amount: Number,
   comments: {
