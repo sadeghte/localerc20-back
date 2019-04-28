@@ -2,6 +2,8 @@
 /logs
 /npm-debug.log
 /node_modules
+/uploads
+/uploads_temp_dir
 /.idea
 .DS_Store
 
