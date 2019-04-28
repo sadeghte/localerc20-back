@@ -11,10 +11,14 @@ const middleware = require('./middleware');
 const Authenticate = require('./middleware/Authenticate');
 const api = require('./api');
 const config = require('./config.json');
+const {forceAuthorized} = require('./middleware/Authenticate');
 require('./coreEventHandlers');
 
 let app = express();
 app.server = http.createServer(app);
+
+app.use(express.static('public'));
+app.use('/uploads', /*forceAuthorized,*/ express.static('uploads'));
 
 // logger
 app.use(morgan('dev'));

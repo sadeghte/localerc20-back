@@ -1,4 +1,6 @@
 const randomString = require("../utils/randomString");
+var multer  = require('multer')
+var upload = multer({ dest: 'uploads_temp_dir/' })
 const { Router } = require('express');
 const mongoose = require('mongoose');
 const Advertisement = require('../database/mongooseModels/Advertisement');
@@ -9,6 +11,10 @@ const Transaction = require('../database/mongooseModels/Transaction');
 const TradeMessage = require('../database/mongooseModels/TradeMessage');
 const Feedback = require('../database/mongooseModels/Feedback');
 const requireParam = require('../middleware/requestParamRequire');
+const moveFile = require('../utils/moveFile');
+const idToDirectory = require('../utils/idToDirectory');
+const ensureDirExist = require('../utils/ensureDirExist');
+const path = require('path');
 let router = Router();
 
 router.post('/search', function (req, res, next) {
@@ -168,25 +174,80 @@ router.post('/create',forceAuthorized, requireParam('advertisementId:objectId', 
       })
 })
 
-router.post('/message', forceAuthorized, requireParam('tradeId:objectId', 'type:string', 'content:string'), function(req, res, next){
-  let type = req.body.type;
-  let content = req.body.content;
-  let trade = null
-  if(type !== 'text'){
-    return res.status(500).send({
-      success: false,
-      message: 'At the moment, only text message supported'
-    });
-  }
+/**
+ * Sample request content
+ *
+ * request body [req.body]:
+ * {
+ *      tradeId: '5cc2a3f741b2db0c9495e219',
+ *      message: '123'
+ * }
+ * request files [req.files]:
+ * [
+ *    {
+ *       fieldname: 'attachments[]',
+ *       originalname: 'star.png',
+ *       encoding: '7bit',
+ *       mimetype: 'image/png',
+ *       destination: 'uploads_temp_dir/',
+ *       filename: '18e1669cfa6fc5740535303feef82a6d',
+ *       path: 'uploads_temp_dir/18e1669cfa6fc5740535303feef82a6d',
+ *       size: 25034
+ *    },
+ *    {
+ *       fieldname: 'attachments[]',
+ *       originalname: 'Screenshot from 2019-04-25 14-18-02.png',
+ *       encoding: '7bit',
+ *       mimetype: 'image/png',
+ *       destination: 'uploads_temp_dir/',
+ *       filename: 'c802d2e3350cc99a660846b1e19c94d8',
+ *       path: 'uploads_temp_dir/c802d2e3350cc99a660846b1e19c94d8',
+ *       size: 156863
+ *    }
+ * ]
+
+ */
+function uploadedFileNewName(uploadedFile){
+    let name = uploadedFile.filename + path.extname(uploadedFile.originalname);
+    return name;
+}
+
+router.post('/message', forceAuthorized, upload.array('attachments[]'), requireParam('tradeId:objectId', 'message:string'), function(req, res, next){
+  let currentUser = req.data.user;
+  let content = req.body.message;
+  let trade = null;
+  let fileUploadDirectory = null;
+  let attachments = [];
   Trade.findOne({_id: req.body.tradeId})
       .populate('user')
       .then(trd => {
         if(!trd)
           throw ({message: "Cannot find the trade."});
         trade = trd;
-        // trade.messages.push({sender: req.data.user, type, content});
-        let tradeMessage = new TradeMessage({trade, sender: req.data.user, type, content});
-        return tradeMessage.save();
+        if(req.files && req.files.length > 0){
+            fileUploadDirectory = '/uploads'+idToDirectory(trade._id,"trade");
+            return ensureDirExist(path.resolve(__dirname + "/../../" + fileUploadDirectory));
+        }
+      })
+      .then(() => {
+          if(req.files && req.files.length > 0){
+              attachments = req.files.map(f => (fileUploadDirectory + uploadedFileNewName(f)));
+              let movements = req.files.map(f => moveFile(
+                  path.resolve(__dirname + "/" + `../../${f.path}`),
+                  path.resolve(__dirname + "/../../" + fileUploadDirectory + uploadedFileNewName(f))
+              ))
+              return Promise.all(movements);
+          }
+      })
+      .then(() => {
+          // trade.messages.push({sender: req.data.user, type, content});
+          let tradeMessage = new TradeMessage({
+              trade,
+              sender: req.data.user,
+              attachments,
+              content
+          });
+          return tradeMessage.save();
       })
       .then(() => TradeMessage.find({trade: trade._id}))
       .then(messages => {
@@ -196,6 +257,7 @@ router.post('/message', forceAuthorized, requireParam('tradeId:objectId', 'type:
         })
       })
       .catch(error => {
+          console.log(error);
         res.status(500).send({
           success: false,
           message: error.message || 'server side error',
